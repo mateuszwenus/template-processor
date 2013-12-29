@@ -1,8 +1,6 @@
 package com.github.mateuszwenus.template_processor;
 
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
+import java.awt.Container;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
@@ -14,11 +12,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -33,10 +31,12 @@ import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 
 public class App {
 
 	private static final String ICON_ADD = "add.png";
+	private static final String ICON_DELETE = "delete.png";
 	private static final String ICON_OPEN = "open.png";
 	private static final String ICON_SAVE = "save.png";
 
@@ -57,37 +57,46 @@ public class App {
 	public App() {
 		resourceBundle = ResourceBundle.getBundle("messages", Locale.getDefault());
 		frame = new JFrame(resourceBundle.getString("app.title"));
-		frame.setLayout(new FlowLayout());
-		frame.add(createFramePanel());
+		createFramePanel(frame.getContentPane());
 		frame.pack();
-		frame.setResizable(false);
+		frame.setResizable(true);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setVisible(true);
 	}
 
-	private JPanel createFramePanel() {
-		JPanel framePanel = new JPanel();
-		framePanel.setLayout(new BoxLayout(framePanel, BoxLayout.Y_AXIS));
-		framePanel.add(createUpPanel());
+	private void createFramePanel(Container framePane) {
+		framePane.setLayout(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		gbc.fill = GridBagConstraints.BOTH;
+		gbc.ipadx = 10;
+		gbc.ipady = 10;
+		gbc.weightx = 1;
+		gbc.weighty = 1;
+		framePane.add(createTablePanel(), gbc);
+		gbc.gridx = 1;
+		gbc.weightx = 0;
+		framePane.add(createButtonsPanel(), gbc);
+		gbc.gridx = 0;
+		gbc.gridy = 1;
+		gbc.gridwidth = 2;
+		gbc.weighty = 0;
+		framePane.add(createProgressBar(), gbc);
+	}
+
+	private JProgressBar createProgressBar() {
 		progressBar = new JProgressBar();
 		progressBar.setStringPainted(true);
 		progressBar.setString("");
-		framePanel.add(progressBar);
-		return framePanel;
-	}
-
-	private Component createUpPanel() {
-		JPanel upPanel = new JPanel();
-		upPanel.setLayout(new FlowLayout());
-		upPanel.add(createTablePanel());
-		upPanel.add(createButtonsPanel());
-		return upPanel;
+		return progressBar;
 	}
 
 	private JScrollPane createTablePanel() {
 		table = new JTable();
+		table.setFillsViewportHeight(true);
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		JScrollPane scrollPane = new JScrollPane(table);
-		scrollPane.setPreferredSize(new Dimension(600, 400));
 		return scrollPane;
 	}
 
@@ -99,10 +108,14 @@ public class App {
 		gbc.gridy = 0;
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.ipadx = 10;
-		gbc.ipady = 0;
+		gbc.ipady = 10;
 		buttonsPane.add(createLoadTemplateButton(), gbc);
 		gbc.gridy++;
 		buttonsPane.add(createAddRowButton(), gbc);
+		gbc.gridy++;
+		buttonsPane.add(createAddFiveRowsButton(), gbc);
+		gbc.gridy++;
+		buttonsPane.add(createRemoveLastRowButton(), gbc);
 		gbc.gridy++;
 		buttonsPane.add(createGenerateButton(), gbc);
 		gbc.gridy++;
@@ -110,8 +123,8 @@ public class App {
 	}
 
 	private JButton createLoadTemplateButton() {
-		JButton addButton = createButton(resourceBundle.getString("action.loadTemplate"), ICON_OPEN);
-		addButton.addActionListener(new ActionListener() {
+		JButton btn = createButton(resourceBundle.getString("action.loadTemplate"), ICON_OPEN);
+		btn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser chooser = new JFileChooser();
 				FileNameExtensionFilter filter = new FileNameExtensionFilter("ODT files", "odt");
@@ -125,12 +138,12 @@ public class App {
 			}
 
 		});
-		return addButton;
+		return btn;
 	}
 
 	private JButton createAddRowButton() {
-		JButton addRowButton = createButton(resourceBundle.getString("action.addRow"), ICON_ADD);
-		addRowButton.addActionListener(new ActionListener() {
+		JButton btn = createButton(resourceBundle.getString("action.addRow"), ICON_ADD);
+		btn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				DefaultTableModel model = (DefaultTableModel) table.getModel();
 				Object[] data = null;
@@ -138,12 +151,39 @@ public class App {
 			}
 
 		});
-		return addRowButton;
+		return btn;
+	}
+
+	private JButton createAddFiveRowsButton() {
+		JButton btn = createButton(resourceBundle.getString("action.addFiveRows"), ICON_ADD);
+		btn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				DefaultTableModel model = (DefaultTableModel) table.getModel();
+				Object[] data = null;
+				for (int i = 0; i < 5; i++) {
+					model.addRow(data);
+				}
+			}
+
+		});
+		return btn;
+	}
+
+	private JButton createRemoveLastRowButton() {
+		JButton btn = createButton(resourceBundle.getString("action.removeLastRow"), ICON_DELETE);
+		btn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				DefaultTableModel model = (DefaultTableModel) table.getModel();
+				model.removeRow(model.getRowCount() - 1);
+			}
+
+		});
+		return btn;
 	}
 
 	private JButton createGenerateButton() {
-		JButton addRowButton = createButton(resourceBundle.getString("action.generate"), ICON_SAVE);
-		addRowButton.addActionListener(new ActionListener() {
+		JButton btn = createButton(resourceBundle.getString("action.generate"), ICON_SAVE);
+		btn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				GenerateFilesTask task = new GenerateFilesTask(currentFile, (DefaultTableModel) table.getModel(), progressBar,
 						resourceBundle);
@@ -151,7 +191,7 @@ public class App {
 			}
 
 		});
-		return addRowButton;
+		return btn;
 	}
 
 	private List<String> loadTemplateFields(File file) {
@@ -178,6 +218,14 @@ public class App {
 		table.setModel(dataModel);
 		for (String variable : currentVariables) {
 			dataModel.addColumn(variable);
+		}
+		setPreferredWidths();
+	}
+
+	private void setPreferredWidths() {
+		Enumeration<TableColumn> e = table.getColumnModel().getColumns();
+		while (e.hasMoreElements()) {
+			e.nextElement().setPreferredWidth(150);
 		}
 	}
 
