@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ResourceBundle;
 
 import javax.swing.JProgressBar;
 import javax.swing.table.DefaultTableModel;
@@ -22,11 +23,13 @@ public class GenerateFilesTask extends SwingWorkerWithProgressBar<Void, Void> {
 
 	private File templateFile;
 	private DefaultTableModel tableModel;
+	private ResourceBundle resourceBundle;
 
-	public GenerateFilesTask(File templateFile, DefaultTableModel tableModel, JProgressBar progressBar) {
-		super(progressBar);
+	public GenerateFilesTask(File templateFile, DefaultTableModel tableModel, JProgressBar progressBar, ResourceBundle resourceBundle) {
+		super(progressBar, resourceBundle);
 		this.templateFile = templateFile;
 		this.tableModel = tableModel;
+		this.resourceBundle = resourceBundle;
 	}
 
 	protected int getProgressBarMaximum() {
@@ -36,7 +39,7 @@ public class GenerateFilesTask extends SwingWorkerWithProgressBar<Void, Void> {
 	protected Void doWork() throws Exception {
 		OfficeManager officeManager = null;
 		try {
-			setProgressBarText("Startowanie Open Office...");
+			setProgressBarText(resourceBundle.getString("generateTask.startingOpenOffice"));
 			officeManager = new DefaultOfficeManagerConfiguration().buildOfficeManager();
 			officeManager.start();
 			OfficeDocumentConverter converter = new OfficeDocumentConverter(officeManager);

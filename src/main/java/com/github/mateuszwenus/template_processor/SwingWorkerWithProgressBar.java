@@ -1,5 +1,7 @@
 package com.github.mateuszwenus.template_processor;
 
+import java.util.ResourceBundle;
+
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
@@ -7,9 +9,11 @@ import javax.swing.SwingWorker;
 public abstract class SwingWorkerWithProgressBar<T, V> extends SwingWorker<T, V> {
 
 	private JProgressBar progressBar;
+	private ResourceBundle resourceBundle;
 
-	public SwingWorkerWithProgressBar(JProgressBar progressBar) {
+	public SwingWorkerWithProgressBar(JProgressBar progressBar, ResourceBundle resourceBundle) {
 		this.progressBar = progressBar;
+		this.resourceBundle = resourceBundle;
 	}
 
 	protected T doInBackground() throws Exception {
@@ -53,7 +57,7 @@ public abstract class SwingWorkerWithProgressBar<T, V> extends SwingWorker<T, V>
 	private void showSuccessOnProgressBar() {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				progressBar.setString("Gotowe");
+				progressBar.setString(resourceBundle.getString("progressBar.success"));
 			}
 		});
 	}
@@ -62,7 +66,7 @@ public abstract class SwingWorkerWithProgressBar<T, V> extends SwingWorker<T, V>
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				progressBar.setValue(progressBar.getMaximum());
-				progressBar.setString("Błąd: " + e.getMessage());
+				progressBar.setString(resourceBundle.getString("progressBar.error") + ": " + e.getMessage());
 			}
 		});
 	}

@@ -15,6 +15,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 import javax.swing.BoxLayout;
 import javax.swing.Icon;
@@ -34,10 +36,6 @@ import javax.swing.table.DefaultTableModel;
 
 public class App {
 
-	private static final String OPEN_FILE = "Otwórz szablon";
-	private static final String ADD_ROW = "Dodaj wiersz";
-	private static final String GENERATE = "Generuj ODT i PDF";
-
 	private static final String ICON_ADD = "add.png";
 	private static final String ICON_OPEN = "open.png";
 	private static final String ICON_SAVE = "save.png";
@@ -45,8 +43,8 @@ public class App {
 	private JFrame frame;
 	private JProgressBar progressBar;
 	private JTable table;
-
 	private File currentFile;
+	private ResourceBundle resourceBundle;
 
 	public static void main(String[] args) {
 		try {
@@ -57,7 +55,9 @@ public class App {
 	}
 
 	public App() {
-		frame = new JFrame("Template");
+		Locale locale = Locale.getDefault();
+		resourceBundle = ResourceBundle.getBundle("messages", locale);
+		frame = new JFrame(resourceBundle.getString("app.title"));
 		frame.setLayout(new FlowLayout());
 		frame.add(createFramePanel());
 		frame.pack();
@@ -101,7 +101,7 @@ public class App {
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		gbc.ipadx = 10;
 		gbc.ipady = 0;
-		buttonsPane.add(createOpenButton(), gbc);
+		buttonsPane.add(createLoadTemplateButton(), gbc);
 		gbc.gridy++;
 		buttonsPane.add(createAddRowButton(), gbc);
 		gbc.gridy++;
@@ -110,8 +110,8 @@ public class App {
 		return buttonsPane;
 	}
 
-	private JButton createOpenButton() {
-		JButton addButton = createButton(OPEN_FILE, ICON_OPEN);
+	private JButton createLoadTemplateButton() {
+		JButton addButton = createButton(resourceBundle.getString("action.loadTemplate"), ICON_OPEN);
 		addButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser chooser = new JFileChooser();
@@ -130,7 +130,7 @@ public class App {
 	}
 
 	private JButton createAddRowButton() {
-		JButton addRowButton = createButton(ADD_ROW, ICON_ADD);
+		JButton addRowButton = createButton(resourceBundle.getString("action.addRow"), ICON_ADD);
 		addRowButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				DefaultTableModel model = (DefaultTableModel) table.getModel();
@@ -143,10 +143,11 @@ public class App {
 	}
 
 	private JButton createGenerateButton() {
-		JButton addRowButton = createButton(GENERATE, ICON_SAVE);
+		JButton addRowButton = createButton(resourceBundle.getString("action.generate"), ICON_SAVE);
 		addRowButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				GenerateFilesTask task = new GenerateFilesTask(currentFile, (DefaultTableModel) table.getModel(), progressBar);
+				GenerateFilesTask task = new GenerateFilesTask(currentFile, (DefaultTableModel) table.getModel(), progressBar,
+						resourceBundle);
 				task.execute();
 			}
 
@@ -161,7 +162,7 @@ public class App {
 			FreemarkerAwareDocumentTemplate tpl = new FreemarkerAwareDocumentTemplate(in);
 			return tpl.getFreemarkerVariableNames();
 		} catch (Exception e) {
-			JOptionPane.showMessageDialog(null, "Error " + e.getMessage());
+			JOptionPane.showMessageDialog(null, resourceBundle.getString("app.error") + ": " + e.getMessage());
 			return Collections.emptyList();
 		} finally {
 			if (in != null) {
