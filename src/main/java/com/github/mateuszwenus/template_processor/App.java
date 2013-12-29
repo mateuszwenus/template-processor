@@ -55,8 +55,7 @@ public class App {
 	}
 
 	public App() {
-		Locale locale = Locale.getDefault();
-		resourceBundle = ResourceBundle.getBundle("messages", locale);
+		resourceBundle = ResourceBundle.getBundle("messages", Locale.getDefault());
 		frame = new JFrame(resourceBundle.getString("app.title"));
 		frame.setLayout(new FlowLayout());
 		frame.add(createFramePanel());
