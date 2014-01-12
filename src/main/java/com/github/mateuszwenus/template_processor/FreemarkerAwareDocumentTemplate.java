@@ -3,20 +3,26 @@ package com.github.mateuszwenus.template_processor;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.sf.jooreports.opendocument.OpenDocumentArchive;
 import net.sf.jooreports.templates.ZippedDocumentTemplate;
 import nu.xom.XPathContext;
+
+import org.apache.commons.io.IOUtils;
+
 import freemarker.template.Configuration;
 
 public class FreemarkerAwareDocumentTemplate extends ZippedDocumentTemplate {
 
+	private static final String CONTENT_XML = "content.xml";
 	protected static final String DRAW_NAMESPACE = "urn:oasis:names:tc:opendocument:xmlns:drawing:1.0";
 	protected static final String SCRIPT_NAMESPACE = "urn:oasis:names:tc:opendocument:xmlns:script:1.0";
 	protected static final String TABLE_NAMESPACE = "urn:oasis:names:tc:opendocument:xmlns:table:1.0";
@@ -39,30 +45,48 @@ public class FreemarkerAwareDocumentTemplate extends ZippedDocumentTemplate {
 	}
 
 	public List<String> getFreemarkerVariableNames() throws Exception {
-		List<String> result = new ArrayList<String>();
+		Set<String> variables = new HashSet<String>();
 		OpenDocumentArchive archive = getOpenDocumentArchive();
-		for (Iterator<?> it = archive.getEntryNames().iterator(); it.hasNext();) {
-			String entryName = (String) it.next();
-			if ("content.xml".equals(entryName)) {
-				Pattern p = Pattern.compile("\\$\\{.+?\\}");
-				BufferedReader in = new BufferedReader(new InputStreamReader(archive.getEntryInputStream(entryName)));
-				String line = null;
-				while ((line = in.readLine()) != null) {
-					Matcher matcher = p.matcher(line);
-					while (matcher.find()) {
-						String varName = trimFreemarker(matcher.group());
-						if (!result.contains(varName)) {
-							result.add(varName);
-						}
-					}
-				}
-				in.close();
-			}
+		if (archive.getEntryNames().contains(CONTENT_XML)) {
+			variables.addAll(getFmVariableNamesFromContent(archive));
 		}
+		ArrayList<String> result = new ArrayList<String>(variables);
+		Collections.sort(result);
 		return result;
 	}
 
-	private String trimFreemarker(String group) {
-		return group.substring(2, group.length() - 1);
+	private Collection<String> getFmVariableNamesFromContent(OpenDocumentArchive archive) throws IOException {
+		Collection<String> result = new ArrayList<String>();
+		BufferedReader in = null;
+		try {
+			Pattern p = Pattern.compile("\\$\\{.+?\\}");
+			in = new BufferedReader(archive.getEntryReader(CONTENT_XML));
+			String line = null;
+			while ((line = in.readLine()) != null) {
+				Matcher matcher = p.matcher(line);
+				while (matcher.find()) {
+					result.add(tryGetFmVariableName(matcher.group()));
+				}
+			}
+			return result;
+		} finally {
+			IOUtils.closeQuietly(in);
+		}
+	}
+
+	private String tryGetFmVariableName(String str) {
+		if (str.matches("\\$\\{.+\\(.+\\)\\}")) {
+			return getFmVariableNameFromFunctionCall(str);
+		} else {
+			return simpleGetFmVariableName(str);
+		}
+	}
+
+	private String getFmVariableNameFromFunctionCall(String str) {
+		return str.substring(str.indexOf('(') + 1, str.length() - 2);
+	}
+
+	private String simpleGetFmVariableName(String str) {
+		return str.substring(2, str.length() - 1);
 	}
 }

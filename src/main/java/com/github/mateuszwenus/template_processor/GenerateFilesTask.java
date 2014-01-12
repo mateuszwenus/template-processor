@@ -65,7 +65,8 @@ public class GenerateFilesTask extends SwingWorkerWithProgressBar<Void, Void> {
 
 	private String generateOneFile(DocumentTemplate template, int row) throws FileNotFoundException, IOException, DocumentTemplateException {
 		String fileName = "output_";
-		Map<String, String> model = new HashMap<String, String>();
+		Map<String, Object> model = new HashMap<String, Object>();
+		model.put("numberToText", new NumberToTextMethod());
 		for (int col = 0; col < tableModel.getColumnCount(); col++) {
 			String key = tableModel.getColumnName(col);
 			Object cellValue = tableModel.getValueAt(row, col);

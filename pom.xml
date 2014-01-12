@@ -30,8 +30,13 @@
 			<artifactId>jodconverter-core</artifactId>
 			<version>3.0-mateuszwenus</version>
 		</dependency>
+		<dependency>
+			<groupId>com.ibm.icu</groupId>
+			<artifactId>icu4j</artifactId>
+			<version>52.1</version>
+		</dependency>
 	</dependencies>
-	
+
 	<build>
 		<finalName>template-processor</finalName>
 		<plugins>

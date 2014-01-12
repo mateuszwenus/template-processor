@@ -214,7 +214,6 @@ public class App {
 	}
 
 	private void refreshTable(List<String> currentVariables) {
-		Collections.sort(currentVariables);
 		DefaultTableModel dataModel = new DefaultTableModel();
 		table.setModel(dataModel);
 		for (String variable : currentVariables) {
