@@ -96,6 +96,7 @@ public class App {
 		table = new JTable();
 		table.setFillsViewportHeight(true);
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		PasteFromSpreadsheetHandler.registerPasteFromSpreadsheetHandler(table, resourceBundle);
 		JScrollPane scrollPane = new JScrollPane(table);
 		return scrollPane;
 	}
