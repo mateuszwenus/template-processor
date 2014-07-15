@@ -127,7 +127,7 @@ public class App {
 		JButton btn = createButton(resourceBundle.getString("action.loadTemplate"), ICON_OPEN);
 		btn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				JFileChooser chooser = new JFileChooser();
+				JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"));
 				FileNameExtensionFilter filter = new FileNameExtensionFilter("ODT files", "odt");
 				chooser.setFileFilter(filter);
 				int returnVal = chooser.showOpenDialog(frame);
@@ -135,6 +135,7 @@ public class App {
 					currentFile = chooser.getSelectedFile();
 					List<String> currentVariables = loadTemplateFields(currentFile);
 					refreshTable(currentVariables);
+					frame.setTitle(resourceBundle.getString("app.title") + " - " + currentFile.getName());
 				}
 			}
 
