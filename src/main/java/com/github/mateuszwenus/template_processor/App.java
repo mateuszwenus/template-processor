@@ -116,7 +116,7 @@ public class App {
 		gbc.gridy++;
 		buttonsPane.add(createAddFiveRowsButton(), gbc);
 		gbc.gridy++;
-		buttonsPane.add(createRemoveLastRowButton(), gbc);
+		buttonsPane.add(createRemoveSelectedRowsButton(), gbc);
 		gbc.gridy++;
 		buttonsPane.add(createGenerateButton(), gbc);
 		gbc.gridy++;
@@ -171,12 +171,15 @@ public class App {
 		return btn;
 	}
 
-	private JButton createRemoveLastRowButton() {
-		JButton btn = createButton(resourceBundle.getString("action.removeLastRow"), ICON_DELETE);
+	private JButton createRemoveSelectedRowsButton() {
+		JButton btn = createButton(resourceBundle.getString("action.removeSelectedRows"), ICON_DELETE);
 		btn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				int[] rowIdxs = table.getSelectedRows();
 				DefaultTableModel model = (DefaultTableModel) table.getModel();
-				model.removeRow(model.getRowCount() - 1);
+				for (int i = 0; i < rowIdxs.length; i++) {
+					model.removeRow(rowIdxs[i] - i);
+				}
 			}
 
 		});
