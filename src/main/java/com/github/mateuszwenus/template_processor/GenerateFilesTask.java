@@ -5,8 +5,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import javax.swing.JProgressBar;
 import javax.swing.table.DefaultTableModel;
@@ -46,9 +48,11 @@ public class GenerateFilesTask extends SwingWorkerWithProgressBar<Void, Void> {
 
 			DocumentTemplateFactory documentTemplateFactory = new DocumentTemplateFactory();
 			DocumentTemplate template = documentTemplateFactory.getTemplate(templateFile);
+			Set<String> generateFileNames = new HashSet<String>();
 			for (int row = 0; row < tableModel.getRowCount(); row++) {
-				String path = generateOneFile(template, row);
+				String path = generateOneFile(template, row, generateFileNames);
 				converter.convert(new File(path), new File(createPdfPath(path)));
+				generateFileNames.add(path);
 				setProgressBarValue(row + 1);
 			}
 		} finally {
@@ -63,8 +67,8 @@ public class GenerateFilesTask extends SwingWorkerWithProgressBar<Void, Void> {
 		return path.substring(0, path.length() - 3) + "pdf";
 	}
 
-	private String generateOneFile(DocumentTemplate template, int row) throws FileNotFoundException, IOException, DocumentTemplateException {
-		String fileName = "output_";
+	private String generateOneFile(DocumentTemplate template, int row, Set<String> previousFileNames) throws FileNotFoundException, IOException, DocumentTemplateException {
+		String fileName = generateFileName(row, previousFileNames);
 		Map<String, Object> model = new HashMap<String, Object>();
 		model.put("numberToText", new NumberToTextMethod());
 		for (int col = 0; col < tableModel.getColumnCount(); col++) {
@@ -72,20 +76,43 @@ public class GenerateFilesTask extends SwingWorkerWithProgressBar<Void, Void> {
 			Object cellValue = tableModel.getValueAt(row, col);
 			String value = cellValue != null ? cellValue.toString() : "";
 			model.put(key, value);
-			if (key.endsWith("_")) {
-				fileName += value + "_";
-			}
 		}
 		FileOutputStream out = null;
 		try {
-			String path = fileName + row + ".odt";
-			out = new FileOutputStream(path);
+			out = new FileOutputStream(fileName);
 			template.createDocument(model, out);
-			return path;
+			return fileName;
 		} finally {
 			if (out != null) {
 				out.close();
 			}
 		}
+	}
+	
+	private String generateFileName(int row, Set<String> previousFileNames) {
+		String fileName = "";
+		String fileExt = ".odt";
+		for (int col = 0; col < tableModel.getColumnCount(); col++) {
+			String key = tableModel.getColumnName(col);
+			if (key.endsWith("_")) {
+				Object cellValue = tableModel.getValueAt(row, col);
+				String value = cellValue != null ? cellValue.toString() : "";
+				if (fileName.length() > 0) {
+					fileName += "_";
+				}
+				fileName += value;
+			}
+		}
+		if (fileName.isEmpty()) {
+			fileName = "output";
+		}
+		if (previousFileNames.contains(fileName + fileExt)) {
+			int i = 1;
+			while (previousFileNames.contains(fileName + "_" + i + fileExt)) {
+				i++;
+			}
+			fileName = fileName + "_" + i;
+		}
+		return fileName + fileExt;
 	}
 }
