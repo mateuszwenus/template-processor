@@ -11,6 +11,7 @@ import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.KeyStroke;
+import javax.swing.table.DefaultTableModel;
 
 public class PasteFromSpreadsheetHandler implements ActionListener {
 
@@ -35,7 +36,8 @@ public class PasteFromSpreadsheetHandler implements ActionListener {
 				String clipboard = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getContents(this)
 						.getTransferData(DataFlavor.stringFlavor);
 				String[] rows = clipboard.split("\n");
-				for (int row = 0; row < Math.min(rows.length, table.getRowCount() - startRow); row++) {
+				ensureTableCapacity(rows, startRow);
+				for (int row = 0; row < rows.length; row++) {
 					String[] cols = rows[row].split("\t");
 					for (int col = 0; col < Math.min(cols.length, table.getColumnCount() - startCol); col++) {
 						table.setValueAt(cols[col], startRow + row, startCol + col);
@@ -44,6 +46,14 @@ public class PasteFromSpreadsheetHandler implements ActionListener {
 			} catch (Exception ex) {
 				JOptionPane.showMessageDialog(null, resourceBundle.getString("app.error") + ": " + ex.getMessage());
 			}
+		}
+	}
+
+	private void ensureTableCapacity(String[] rows, int startRow) {
+		Object[] rowData = null;
+		int numMissingRows = rows.length - table.getRowCount() + startRow;
+		for (int i = 0; i < numMissingRows; i++) {
+			((DefaultTableModel) table.getModel()).addRow(rowData);
 		}
 	}
 
