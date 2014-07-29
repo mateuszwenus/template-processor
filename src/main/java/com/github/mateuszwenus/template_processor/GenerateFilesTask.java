@@ -100,7 +100,7 @@ public class GenerateFilesTask extends SwingWorkerWithProgressBar<Void, Void> {
 				if (fileName.length() > 0) {
 					fileName += "_";
 				}
-				fileName += value;
+				fileName += replaceInvalidCharacters(value);
 			}
 		}
 		if (fileName.isEmpty()) {
@@ -114,5 +114,9 @@ public class GenerateFilesTask extends SwingWorkerWithProgressBar<Void, Void> {
 			fileName = fileName + "_" + i;
 		}
 		return fileName + fileExt;
+	}
+
+	private String replaceInvalidCharacters(String str) {
+		return str.replaceAll("[\\\\/:*?\"<>|]", "_");
 	}
 }
