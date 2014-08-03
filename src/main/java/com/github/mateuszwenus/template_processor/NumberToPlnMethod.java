@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Locale;
 
+import com.google.common.base.CharMatcher;
 import com.ibm.icu.text.RuleBasedNumberFormat;
 
 import freemarker.template.TemplateMethodModel;
@@ -16,7 +17,8 @@ public class NumberToPlnMethod implements TemplateMethodModel {
 		if (arguments == null || arguments.size() != 1) {
 			return "-";
 		}
-		String numStr = String.valueOf(arguments.get(0)).replace(',', '.').replaceAll("\\s", "");
+		String numStr = CharMatcher.DIGIT.or(CharMatcher.anyOf(".,"))
+				.retainFrom(String.valueOf(arguments.get(0))).replace(',', '.');
 		if (numStr.isEmpty()) {
 			return "-";
 		}

@@ -219,7 +219,7 @@ public class App {
 	}
 
 	private void refreshTable(List<String> currentVariables) {
-		DefaultTableModel dataModel = new DefaultTableModel();
+		DefaultTableModel dataModel = new DefaultTableModel(1, 0);
 		table.setModel(dataModel);
 		for (String variable : currentVariables) {
 			dataModel.addColumn(variable);
